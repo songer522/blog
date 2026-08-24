@@ -105,6 +105,14 @@ mark{background:var(--hl);padding:0 1px;border-radius:2px}
 .msg.own{background:#f4f2ed;border-color:#e0dbd1}
 .msg.own .mw{color:var(--dim)}
 .msg.ad{opacity:.62}
+.newbox{background:var(--card);border:1px solid var(--line);border-radius:11px;
+ padding:20px 22px 6px;margin:0 0 26px}
+.newbox h3{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--ink);margin:0 0 5px}
+.newbox p.hint{font-size:12.5px;color:var(--dim);line-height:1.85;margin:0 0 12px}
+#waline{--waline-theme-color:#5c5348;--waline-active-color:#2f2b26;
+ --waline-font-size:14px;--waline-bgcolor:transparent;--waline-bgcolor-light:#f4f2ee;
+ --waline-border-color:var(--line);--waline-color:var(--ink);--waline-border-radius:8px}
+#waline .wl-panel{border-color:var(--line)}
 .wnote{font-size:13px;color:var(--dim);line-height:1.9;margin:0 0 20px;max-width:44em}
 .top{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));
  width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
@@ -178,6 +186,7 @@ footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
     src="https://hits.sh/songer522.github.io/blog.svg?style=plastic&label=&color=e8e6e2&labelColor=fbfaf8"
     alt="" onerror="this.closest('.hits').style.display='none'"></div>
 </div></footer>
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css">
 <div class="lb" id="lb"><img id="lbi">
   <button class="lbnav" id="lbp" aria-label="上一张">‹</button>
   <button class="lbnav" id="lbn" aria-label="下一张">›</button>
@@ -305,6 +314,9 @@ function wall(){view='wall';tab();
   h+='<div class="wnote">新浪把博文下面的评论清空了，一条也没剩下。这个留言板却还在，'
    +'从 2006 年 1 月一直到今天，'+new Set(W.filter(x=>x.kind==='msg').map(x=>x.who)).size
    +' 个人留下过话。原样保留，错别字和火星文都没有改。</div>';
+  h+='<div class="newbox"><h3>也留一句吧</h3>'
+   +'<p class="hint">我经常查看这个页面，大概每两年半就一回</p>'
+   +'<div id="wslot"></div></div>';
   h+='<div class="chips"><button class="chip'+(WAD?'':' on')+'" data-wad="0">留言 '
    +(W.length-ads.length)+'</button><button class="chip'+(WAD?' on':'')+'" data-wad="1">连广告与串门一起看 '
    +W.length+'</button></div>';
@@ -322,6 +334,43 @@ function wall(){view='wall';tab();
      +'</div><div class="mb">'+esc(m.body)+'</div></div>';
   });
   show(h,false);
+  mountWaline();
+}
+// built once and moved back into place on re-render, so switching tabs
+// never reloads the thread or throws away a half-typed message
+let WHOST=null;
+function mountWaline(){
+  const slot=document.getElementById('wslot');
+  if(!slot) return;
+  if(!WHOST){
+    WHOST=document.createElement('div');
+    WHOST.id='waline';
+    slot.appendChild(WHOST);
+    import('https://unpkg.com/@waline/client@v3/dist/waline.js').then(m=>{
+      m.init({
+        el:'#waline',
+        serverURL:'https://neverland-waline.vercel.app',
+        path:'/liuyan',            // one thread for the whole guestbook
+        lang:'zh-CN',
+        login:'disable',           // 游客留言，不需要账号
+        meta:['nick'],
+        requiredMeta:['nick'],
+        emoji:false, search:false, imageUploader:false,
+        reaction:false, pageview:false, dark:false,
+        wordLimit:800,
+        locale:{
+          placeholder:'写点什么吧……',
+          nick:'名字',
+          nickError:'留个称呼吧，随便什么都行',
+          submit:'发表',
+          comment:'新留言',
+          sofa:'还没有人留言，你可以是第一个。'
+        }
+      });
+    }).catch(()=>{ slot.innerHTML='<p class="hint">留言板暂时加载不出来，稍后再试试。</p>'; });
+    return;
+  }
+  slot.appendChild(WHOST);
 }
 function series(){view='series';tab();
   let h='';
