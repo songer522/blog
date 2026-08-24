@@ -105,6 +105,12 @@ mark{background:var(--hl);padding:0 1px;border-radius:2px}
 .msg.own{background:#f4f2ed;border-color:#e0dbd1}
 .msg.own .mw{color:var(--dim)}
 .msg.ad{opacity:.62}
+.pcom{margin:34px 0 0}
+.pcom h3{font-family:var(--sans);font-size:12px;letter-spacing:.18em;color:var(--dim);
+ font-weight:600;margin:0 0 14px}
+#pwaline{--waline-theme-color:#5c5348;--waline-active-color:#2f2b26;
+ --waline-font-size:14px;--waline-bgcolor:transparent;--waline-bgcolor-light:#f4f2ee;
+ --waline-border-color:var(--line);--waline-color:var(--ink);--waline-border-radius:8px}
 .newbox{background:var(--card);border:1px solid var(--line);border-radius:11px;
  padding:20px 22px 6px;margin:0 0 26px}
 .newbox h3{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--ink);margin:0 0 5px}
@@ -338,6 +344,20 @@ function wall(){view='wall';tab();
 }
 // built once and moved back into place on re-render, so switching tabs
 // never reloads the thread or throws away a half-typed message
+let WALINE=null;
+function walineLib(){
+  if(!WALINE) WALINE=import('https://unpkg.com/@waline/client@v3/dist/waline.js');
+  return WALINE;
+}
+const WL_BASE={
+  serverURL:'https://neverland-waline.vercel.app',
+  lang:'zh-CN', login:'disable', meta:['nick'], requiredMeta:['nick'],
+  emoji:false, search:false, imageUploader:false,
+  reaction:false, pageview:false, dark:false, wordLimit:800,
+  locale:{ placeholder:'写点什么吧……', nick:'名字',
+    nickError:'留个称呼吧，随便什么都行', submit:'发表', comment:'新留言',
+    sofa:'还没有人留言，你可以是第一个。' }
+};
 let WHOST=null;
 function mountWaline(){
   const slot=document.getElementById('wslot');
@@ -346,27 +366,8 @@ function mountWaline(){
     WHOST=document.createElement('div');
     WHOST.id='waline';
     slot.appendChild(WHOST);
-    import('https://unpkg.com/@waline/client@v3/dist/waline.js').then(m=>{
-      m.init({
-        el:'#waline',
-        serverURL:'https://neverland-waline.vercel.app',
-        path:'/liuyan',            // one thread for the whole guestbook
-        lang:'zh-CN',
-        login:'disable',           // 游客留言，不需要账号
-        meta:['nick'],
-        requiredMeta:['nick'],
-        emoji:false, search:false, imageUploader:false,
-        reaction:false, pageview:false, dark:false,
-        wordLimit:800,
-        locale:{
-          placeholder:'写点什么吧……',
-          nick:'名字',
-          nickError:'留个称呼吧，随便什么都行',
-          submit:'发表',
-          comment:'新留言',
-          sofa:'还没有人留言，你可以是第一个。'
-        }
-      });
+    walineLib().then(m=>{
+      m.init(Object.assign({}, WL_BASE, {el:'#waline', path:'/liuyan'}));
     }).catch(()=>{ slot.innerHTML='<p class="hint">留言板暂时加载不出来，稍后再试试。</p>'; });
     return;
   }
@@ -409,9 +410,28 @@ function post(id, restore){
   const a=P[p.n-1],b=P[p.n+1];
   h+=a?'<a data-go="'+a.id+'">← '+esc(a.t)+'</a>':'<span></span>';
   h+=b?'<a data-go="'+b.id+'" style="text-align:right">'+esc(b.t)+' →</a>':'<span></span>';
-  show(h+'</div>', false);
+  h+='</div><div class="pcom"><h3>说点什么</h3><div id="pslot"></div></div>';
+  show(h, false);
+  mountPostWaline(id);
   setScroll(restore ? (SCROLL['post:'+id]||0) : 0);
   pushView('post', id);
+}
+// one instance, re-pointed at a new path as you move between posts —
+// cheaper than tearing the widget down and rebuilding it 350 times
+let PHOST=null, PAPI=null;
+function mountPostWaline(id){
+  const slot=document.getElementById('pslot');
+  if(!slot) return;
+  if(!PHOST){
+    PHOST=document.createElement('div'); PHOST.id='pwaline';
+    slot.appendChild(PHOST);
+    walineLib().then(m=>{
+      PAPI=m.init(Object.assign({}, WL_BASE, {el:'#pwaline', path:'/'+id}));
+    }).catch(()=>{ slot.innerHTML='<p class="hint">留言区暂时加载不出来。</p>'; });
+    return;
+  }
+  slot.appendChild(PHOST);
+  if(PAPI && PAPI.update) PAPI.update({path:'/'+id});
 }
 const fig=m=>'<figure><img loading="lazy" src="images/i'+String(m.i).padStart(3,'0')+'.jpg" '
   +'width="'+m.w+'" height="'+m.h+'" data-zoom="'+m.i+'"></figure>';
