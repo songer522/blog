@@ -193,7 +193,7 @@ footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
     alt="" onerror="this.closest('.hits').style.display='none'"></div>
 </div></footer>
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css">
-<div class="lb" id="lb"><img id="lbi">
+<div class="lb" id="lb"><img id="lbi" alt="">
   <button class="lbnav" id="lbp" aria-label="上一张">‹</button>
   <button class="lbnav" id="lbn" aria-label="下一张">›</button>
   <button id="lbx" aria-label="关闭">×</button>
@@ -502,17 +502,20 @@ topBtn.onclick=()=>{
 };
 // the lightbox is a gallery over every zoomable image in the current view,
 // so ‹ › walk the album (or the post) without closing it
-let LB=[], LBI=0;
+let LB=[], LBA=[], LBI=0;
 const lbSrc=id=>'images/'+(String(id)[0]==='x'?id:'i'+String(id).padStart(3,'0'))+'.jpg';
 function paintLb(){
   const id=LB[LBI];
   $('#lbi').src=lbSrc(id);
+  $('#lbi').alt=LBA[LBI]||'';
   $('#lbc').textContent=(LBI+1)+' / '+LB.length;
   $('#lbp').disabled=LBI<=0;
   $('#lbn').disabled=LBI>=LB.length-1;
 }
 function openLb(el){
-  LB=[...main.querySelectorAll('[data-zoom]')].map(n=>n.dataset.zoom);
+  const zs=[...main.querySelectorAll('[data-zoom]')];
+  LB=zs.map(n=>n.dataset.zoom);
+  LBA=zs.map(n=>n.getAttribute('alt')||n.getAttribute('title')||'');
   LBI=Math.max(0, LB.indexOf(el.dataset.zoom));
   $('#lb').classList.add('on');
   paintLb();
