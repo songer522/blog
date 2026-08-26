@@ -193,7 +193,7 @@ footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
     alt="" onerror="this.closest('.hits').style.display='none'"></div>
 </div></footer>
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css">
-<div class="lb" id="lb"><img id="lbi">
+<div class="lb" id="lb"><img id="lbi" alt="">
   <button class="lbnav" id="lbp" aria-label="上一张">‹</button>
   <button class="lbnav" id="lbn" aria-label="下一张">›</button>
   <button id="lbx" aria-label="关闭">×</button>
@@ -209,6 +209,7 @@ const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&qu
 const main=$('#main');
 let view='time';
 
+const CATN={}; D.cats.forEach(c=>{CATN[c.k]=c.n});
 function counts(){const c={};P.forEach(p=>{const k=p.d.slice(0,10);c[k]=(c[k]||0)+1});return c}
 const DAY=counts();
 const YEARS=[...new Set(P.map(p=>p.d.slice(0,4)))].sort();
@@ -252,7 +253,7 @@ function heat(){
 const stat=(a,b)=>'<div class="stat"><b>'+a+'</b><span>'+b+'</span></div>';
 
 function card(p,hl){
-  const th=p.m.length?'<img class="tn" loading="lazy" src="thumbs/i'+String(p.m[0].i).padStart(3,'0')+'.jpg">':'';
+  const th=p.m.length?'<img class="tn" alt="" loading="lazy" src="thumbs/i'+String(p.m[0].i).padStart(3,'0')+'.jpg">':'';
   let ex=p.body.replace(/\n/g,' ').slice(0,110);
   if(hl){const k=hl.toLowerCase(),j=p.body.toLowerCase().indexOf(k);
     if(j>=0){const a=Math.max(0,j-34);ex=(a?'…':'')+p.body.slice(a,a+120).replace(/\n/g,' ');}}
@@ -294,8 +295,11 @@ function render_photos(){
   const ex = sel ? D.extra.filter(x=>x.c.indexOf(sel)>=0) : D.extra;
   if(ex.length){
     h+='<div class="yhd"><b>这四年啊</b><span>'+ex.length+' 张</span></div><div class="walls">';
-    ex.forEach(x=>{ h+='<img loading="lazy" src="thumbs/x'+String(x.k).padStart(3,'0')+'.jpg" '
-      +'data-zoom="x'+String(x.k).padStart(3,'0')+'" title="'+(x.d||'')+'">'; });
+    ex.forEach(x=>{
+      const cn=(x.c||[]).map(k=>CATN[k]).filter(Boolean).join(' · ');
+      h+='<img loading="lazy" src="thumbs/x'+String(x.k).padStart(3,'0')+'.jpg" '
+        +'alt="'+esc([cn,x.d].filter(Boolean).join(' · ')||'这四年啊')+'" '
+        +'data-zoom="x'+String(x.k).padStart(3,'0')+'" title="'+(x.d||'')+'">'; });
     h+='</div>';
   }
   const years=[...new Set(shown.map(p=>p.y))];
@@ -306,6 +310,7 @@ function render_photos(){
     g.forEach(m=>{
       const t=m.p&&BY[m.p]?BY[m.p].t:'未能归位';
       h+='<img loading="lazy" src="thumbs/i'+String(m.i).padStart(3,'0')+'.jpg" '
+        +'alt="'+esc(m.p&&BY[m.p]?t:lab)+'" '
         +(m.p?'data-go="'+m.p+'"':'data-zoom="'+m.i+'"')+' title="'+esc(t)+'">';
     });
     h+='</div>';
@@ -402,10 +407,10 @@ function post(id, restore){
   view='post';CUR=id;tab();
   const at={};p.m.forEach(m=>{(at[m.a]=at[m.a]||[]).push(m)});
   let h='<article><div class="dt">'+p.d+'</div><h1>'+esc(p.t)+'</h1>';
-  (at[-1]||[]).forEach(m=>{h+=fig(m)});
+  (at[-1]||[]).forEach(m=>{h+=fig(m,p.t)});
   p.p.forEach((t,n)=>{h+='<p>'+esc(t)+'</p>';
-    (at[n]||[]).forEach(m=>{h+=fig(m)})});
-  if(!p.p.length)Object.keys(at).forEach(k=>at[k].forEach(m=>{h+=fig(m)}));
+    (at[n]||[]).forEach(m=>{h+=fig(m,p.t)})});
+  if(!p.p.length)Object.keys(at).forEach(k=>at[k].forEach(m=>{h+=fig(m,p.t)}));
   h+='</article><div class="nav2">';
   const a=P[p.n-1],b=P[p.n+1];
   h+=a?'<a data-go="'+a.id+'">← '+esc(a.t)+'</a>':'<span></span>';
@@ -433,8 +438,8 @@ function mountPostWaline(id){
   slot.appendChild(PHOST);
   if(PAPI && PAPI.update) PAPI.update({path:'/'+id});
 }
-const fig=m=>'<figure><img loading="lazy" src="images/i'+String(m.i).padStart(3,'0')+'.jpg" '
-  +'width="'+m.w+'" height="'+m.h+'" data-zoom="'+m.i+'"></figure>';
+const fig=(m,t)=>'<figure><img loading="lazy" src="images/i'+String(m.i).padStart(3,'0')+'.jpg" '
+  +'alt="'+esc(t||'')+'" width="'+m.w+'" height="'+m.h+'" data-zoom="'+m.i+'"></figure>';
 
 // Every view keeps its own scroll position, and every move is a real history
 // entry — so Back returns you to the album exactly where you left it, and
@@ -497,17 +502,20 @@ topBtn.onclick=()=>{
 };
 // the lightbox is a gallery over every zoomable image in the current view,
 // so ‹ › walk the album (or the post) without closing it
-let LB=[], LBI=0;
+let LB=[], LBA=[], LBI=0;
 const lbSrc=id=>'images/'+(String(id)[0]==='x'?id:'i'+String(id).padStart(3,'0'))+'.jpg';
 function paintLb(){
   const id=LB[LBI];
   $('#lbi').src=lbSrc(id);
+  $('#lbi').alt=LBA[LBI]||'';
   $('#lbc').textContent=(LBI+1)+' / '+LB.length;
   $('#lbp').disabled=LBI<=0;
   $('#lbn').disabled=LBI>=LB.length-1;
 }
 function openLb(el){
-  LB=[...main.querySelectorAll('[data-zoom]')].map(n=>n.dataset.zoom);
+  const zs=[...main.querySelectorAll('[data-zoom]')];
+  LB=zs.map(n=>n.dataset.zoom);
+  LBA=zs.map(n=>n.getAttribute('alt')||n.getAttribute('title')||'');
   LBI=Math.max(0, LB.indexOf(el.dataset.zoom));
   $('#lb').classList.add('on');
   paintLb();
