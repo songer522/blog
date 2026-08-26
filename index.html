@@ -219,7 +219,7 @@ function yearBlock(y){
   const s=new Date(y+'-01-01T00:00:00'), e=new Date(y+'-12-31T00:00:00');
   let d=new Date(s); d.setDate(d.getDate()-d.getDay());
   while(d<=e){
-    const iso=d.toISOString().slice(0,10), c=DAY[iso]||0;
+    const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'), c=DAY[iso]||0;
     const lv=c===0?'':(c===1?'l1':c===2?'l2':c<=4?'l3':'l4');
     h+='<div class="cell '+lv+(c?' has':'')+'"'+(c?' data-d="'+iso+'" title="'+iso+' · '+c+' 篇"':'')+'></div>';
     d.setDate(d.getDate()+1);
