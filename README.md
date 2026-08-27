@@ -6,6 +6,9 @@
 `index.html` 内已包含全部文字与检索功能，图片放在 `images/`（正文）与 `thumbs/`（缩略图）。
 直接双击 `index.html` 即可离线浏览。
 
+深色模式跟随系统（`prefers-color-scheme`），没有开关。配色全部走 CSS 自定义属性，
+`src/styles.css` 顶部一份浅色、一份深色，下面的规则一条都不用重复。
+
 唯二的外部依赖是留言功能与访问计数，均在离线时自动降级，不影响正文阅读：
 
 - 留言板与文章留言：Waline，脚本与样式来自 unpkg，数据来自 `neverland-waline.vercel.app`；加载失败时显示一行提示。
