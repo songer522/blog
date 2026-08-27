@@ -396,6 +396,7 @@ paintTheme();
   }
   function setOpen(open){
     root.classList.toggle('open',open);
+    document.body.classList.toggle('has-player-open',open);
     fab.setAttribute('aria-expanded',open?'true':'false');
   }
   function load(idx,autoplay){
