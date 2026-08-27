@@ -21,6 +21,26 @@ const complain = (msg) => problems.push(msg);
 
 const meta = load('meta.json');
 
+// music/: filename "title - artist.ext" → { title, artist, src }. Audio stays on disk.
+const AUDIO_EXT = new Set(['.mp3', '.m4a', '.ogg', '.wav']);
+const loadMusic = () => {
+  const dirPath = path.join(ROOT, 'music');
+  if (!fs.existsSync(dirPath)) return [];
+  return fs
+    .readdirSync(dirPath)
+    .filter((f) => AUDIO_EXT.has(path.extname(f).toLowerCase()))
+    .sort((a, b) => a.localeCompare(b, 'zh'))
+    .map((file) => {
+      const base = path.basename(file, path.extname(file));
+      const i = base.lastIndexOf(' - ');
+      return {
+        title: i >= 0 ? base.slice(0, i) : base,
+        artist: i >= 0 ? base.slice(i + 3) : '',
+        src: 'music/' + file,
+      };
+    });
+};
+
 // Key order is part of the output; build it explicitly rather than spreading.
 const D = {
   posts: load('posts.json'),
@@ -31,6 +51,7 @@ const D = {
   photos: load('photos.json'),
   cats: meta.cats,
   wall: load('wall.json'),
+  music: loadMusic(),
 };
 
 // ---------------------------------------------------------------- validate
@@ -211,7 +232,7 @@ if (process.argv.includes('--check')) {
 
 fs.writeFileSync(out, html);
 console.log(
-  'built index.html — %d posts, %d photos, %d extra, %d wall, %s',
-  D.posts.length, D.photos.length, D.extra.length, D.wall.length,
+  'built index.html — %d posts, %d photos, %d extra, %d wall, %d tracks, %s',
+  D.posts.length, D.photos.length, D.extra.length, D.wall.length, D.music.length,
   (html.length / 1024).toFixed(0) + 'KB',
 );
