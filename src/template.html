@@ -7,6 +7,12 @@
 <style>
 {{styles}}
 </style>
+<script>
+/* 在首次绘制前定好配色，避免切过的访客看到一闪的浅色。
+   file:// 下 Chrome 会禁掉 localStorage，所以整段包在 try 里。 */
+try{var t=localStorage.getItem('theme');
+ if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}
+</script>
 </head><body>
 <header><div class="wrap hd">
   <div class="brand"><img id="ava" src="avatar.jpg" alt="" onerror="this.style.display='none'">
@@ -18,15 +24,14 @@
     <button data-v="wall">留言板</button>
   </nav>
   <input id="q" placeholder="搜索全文…" autocomplete="off">
+  <button id="theme" type="button" aria-label="配色"></button>
 </div></header>
 <main><div class="wrap" id="main"></div></main>
 <footer><div class="wrap">
   <div>Neverland · 共 {{postCount}} 篇 · 原载于新浪博客 · 本站为离线存档</div>
-  <div class="hits"><span>本站访问</span><picture>
-    <source media="(prefers-color-scheme:dark)"
-      srcset="https://hits.sh/songer522.github.io/blog.svg?style=plastic&label=&color=2d2b27&labelColor=141312">
-    <img src="https://hits.sh/songer522.github.io/blog.svg?style=plastic&label=&color=e8e6e2&labelColor=fbfaf8"
-      alt="" onerror="this.closest('.hits').style.display='none'"></picture></div>
+  <div class="hits"><span>本站访问</span><img
+    src="https://hits.sh/songer522.github.io/blog.svg?style=plastic&label=&color=e8e6e2&labelColor=fbfaf8"
+    alt="" onerror="this.closest('.hits').style.display='none'"></div>
 </div></footer>
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css">
 <div class="lb" id="lb"><img id="lbi" alt="">
