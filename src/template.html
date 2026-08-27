@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neverland · 宋二</title>
+<meta name="description" content="Neverland · 2005–2011 年的 {{postCount}} 篇博客存档">
+<style>
+{{styles}}
+</style>
+</head><body>
+<header><div class="wrap hd">
+  <div class="brand"><img id="ava" src="avatar.jpg" alt="" onerror="this.style.display='none'">
+    <span>Neverland<small>2005 – 2011</small></span></div>
+  <nav>
+    <button data-v="time">时间轴</button>
+    <button data-v="photo">相册</button>
+    <button data-v="series">系列</button>
+    <button data-v="wall">留言板</button>
+  </nav>
+  <input id="q" placeholder="搜索全文…" autocomplete="off">
+</div></header>
+<main><div class="wrap" id="main"></div></main>
+<footer><div class="wrap">
+  <div>Neverland · 共 {{postCount}} 篇 · 原载于新浪博客 · 本站为离线存档</div>
+  <div class="hits"><span>本站访问</span><img
+    src="https://hits.sh/songer522.github.io/blog.svg?style=plastic&label=&color=e8e6e2&labelColor=fbfaf8"
+    alt="" onerror="this.closest('.hits').style.display='none'"></div>
+</div></footer>
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css">
+<div class="lb" id="lb"><img id="lbi" alt="">
+  <button class="lbnav" id="lbp" aria-label="上一张">‹</button>
+  <button class="lbnav" id="lbn" aria-label="下一张">›</button>
+  <button id="lbx" aria-label="关闭">×</button>
+  <div class="lbcount" id="lbc"></div>
+</div>
+<button class="top" id="top" aria-label="回到顶部" title="回到顶部">↑</button>
+{{data}}
+<script>
+{{app}}
+</script>
+</body></html>

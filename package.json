@@ -1,0 +1,10 @@
+{
+  "name": "neverland",
+  "version": "1.0.0",
+  "private": true,
+  "description": "2005–2011 年新浪博客的离线存档",
+  "scripts": {
+    "build": "node build.js",
+    "check": "node build.js --check"
+  }
+}
