@@ -13,25 +13,39 @@
  --bg:#fbfaf8; --bg-blur:rgba(251,250,248,.94); --card:#fff; --on-ink:#fff;
  --soft:#f0eeea; --wash:#f4f2ee; --own-line:#e0dbd1;
  --prose:#55524e; --excerpt:#6d6a66;
- --hl:#ffe9a8; --ph:#eee; --shadow:rgba(0,0,0,.10);
+ --hl:#ffe9a8; --ph:#eee; --shadow:rgba(0,0,0,.10); --badge-filter:none;
  --ui:#5c5348; --ui-strong:#2f2b26;
  --cell-0:#eeece8; --cell-1:#d7e6d2; --cell-2:#9fc99a; --cell-3:#5fa65c; --cell-4:#2f7a3c;
  --sans:"PingFang SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,system-ui,sans-serif;
  --serif:"Songti SC","Noto Serif CJK SC","Source Han Serif SC",Georgia,serif;
 }
-/* 深色模式：只换颜色变量，下面的规则一行都不用动 */
+/* 深色配色只写在 src/theme-dark.css，构建时填进下面两处：
+   一处跟随系统，一处对应访客手动切到「深色」。 */
 @media(prefers-color-scheme:dark){
- :root{
+ :root:not([data-theme="light"]){
   --ink:#e7e4df; --dim:#8b8781; --faint:#66625c;
   --line:#2d2b27; --line-hover:#454239;
   --bg:#141312; --bg-blur:rgba(20,19,18,.94); --card:#1c1a18; --on-ink:#141312;
   --soft:#26231f; --wash:#232120; --own-line:#3b352b;
   --prose:#c3bfb8; --excerpt:#a09b93;
-  --hl:#6d5a1e; --ph:#2a2724; --shadow:rgba(0,0,0,.5);
+  --hl:#6d5a1e; --ph:#2a2724; --shadow:rgba(0,0,0,.5); --badge-filter:invert(.88);
   --ui:#6e6355; --ui-strong:#8a7d6c;
   --cell-0:#232120; --cell-1:#1e3d24; --cell-2:#2f6b36; --cell-3:#479a4b; --cell-4:#6fc871;
  }
 }
+:root[data-theme="dark"]{
+  --ink:#e7e4df; --dim:#8b8781; --faint:#66625c;
+  --line:#2d2b27; --line-hover:#454239;
+  --bg:#141312; --bg-blur:rgba(20,19,18,.94); --card:#1c1a18; --on-ink:#141312;
+  --soft:#26231f; --wash:#232120; --own-line:#3b352b;
+  --prose:#c3bfb8; --excerpt:#a09b93;
+  --hl:#6d5a1e; --ph:#2a2724; --shadow:rgba(0,0,0,.5); --badge-filter:invert(.88);
+  --ui:#6e6355; --ui-strong:#8a7d6c;
+  --cell-0:#232120; --cell-1:#1e3d24; --cell-2:#2f6b36; --cell-3:#479a4b; --cell-4:#6fc871;
+}
+/* 手动指定时，表单控件和滚动条也跟着走 */
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
 html,body{margin:0;padding:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);
  -webkit-font-smoothing:antialiased;line-height:1.6}
@@ -54,6 +68,11 @@ nav button.on{color:var(--on-ink);background:var(--ink)}
 #q{font-family:var(--sans);font-size:13px;border:1px solid var(--line);background:var(--card);
  color:var(--ink);border-radius:20px;padding:7px 14px;width:170px;outline:none}
 #q::placeholder{color:var(--dim)}
+#theme{font-family:var(--sans);font-size:13px;line-height:1;color:var(--dim);background:none;
+ border:1px solid var(--line);border-radius:50%;width:30px;height:30px;flex:none;cursor:pointer;
+ display:flex;align-items:center;justify-content:center;padding:0;
+ -webkit-tap-highlight-color:transparent}
+#theme:hover{color:var(--ink);border-color:var(--line-hover);background:var(--soft)}
 #q:focus{border-color:var(--dim);width:230px}
 main{padding:34px 0 90px;min-height:60vh}
 
@@ -185,15 +204,21 @@ mark{background:var(--hl);color:var(--ink);padding:0 1px;border-radius:2px}
 footer{border-top:1px solid var(--line);color:var(--faint);font-size:11.5px;padding:22px 0 40px}
 footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .hits{display:flex;align-items:center;gap:7px;color:var(--faint)}
-.hits img{height:17px;display:block;opacity:.85}
+.hits img{height:17px;display:block;opacity:.85;filter:var(--badge-filter)}
 @media(max-width:640px){footer .wrap{flex-direction:column;align-items:flex-start;gap:9px}}
 @media(max-width:640px){
  article{padding:22px 18px 30px;border-radius:0;border-left:0;border-right:0}
  article h1{font-size:21px}article p{font-size:15px;line-height:1.95}
- .hd{flex-wrap:wrap;gap:9px}#q,#q:focus{width:100%;order:5}
+ .hd{flex-wrap:wrap;gap:9px}#q,#q:focus{width:auto;flex:1;order:5}#theme{order:6}
  .wrap{padding:0 13px}
 }
 </style>
+<script>
+/* 在首次绘制前定好配色，避免切过的访客看到一闪的浅色。
+   file:// 下 Chrome 会禁掉 localStorage，所以整段包在 try 里。 */
+try{var t=localStorage.getItem('theme');
+ if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}
+</script>
 </head><body>
 <header><div class="wrap hd">
   <div class="brand"><img id="ava" src="avatar.jpg" alt="" onerror="this.style.display='none'">
@@ -205,15 +230,14 @@ footer .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
     <button data-v="wall">留言板</button>
   </nav>
   <input id="q" placeholder="搜索全文…" autocomplete="off">
+  <button id="theme" type="button" aria-label="配色"></button>
 </div></header>
 <main><div class="wrap" id="main"></div></main>
 <footer><div class="wrap">
   <div>Neverland · 共 350 篇 · 原载于新浪博客 · 本站为离线存档</div>
-  <div class="hits"><span>本站访问</span><picture>
-    <source media="(prefers-color-scheme:dark)"
-      srcset="https://hits.sh/songer522.github.io/blog.svg?style=plastic&label=&color=2d2b27&labelColor=141312">
-    <img src="https://hits.sh/songer522.github.io/blog.svg?style=plastic&label=&color=e8e6e2&labelColor=fbfaf8"
-      alt="" onerror="this.closest('.hits').style.display='none'"></picture></div>
+  <div class="hits"><span>本站访问</span><img
+    src="https://hits.sh/songer522.github.io/blog.svg?style=plastic&label=&color=e8e6e2&labelColor=fbfaf8"
+    alt="" onerror="this.closest('.hits').style.display='none'"></div>
 </div></footer>
 <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css">
 <div class="lb" id="lb"><img id="lbi" alt="">
@@ -574,6 +598,27 @@ $('#lb').addEventListener('touchend',e=>{
 $('#q').addEventListener('input',e=>search(e.target.value));
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>goto_(b.dataset.v));
 $('.brand').onclick=()=>{saveScroll();SCROLL.time=0;view='time';timeline(true);setScroll(0);pushView('time')};
+
+// 配色：跟随系统 → 浅色 → 深色 → 跟随系统。跟随系统时不写 data-theme，
+// 也不留 localStorage，交给 CSS 里的 prefers-color-scheme。
+const THEMES=[{k:'',n:'跟随系统',i:'◐'},{k:'light',n:'浅色',i:'☀'},{k:'dark',n:'深色',i:'☾'}];
+// file:// 下 Chrome 会禁掉 localStorage：仍然能切，只是刷新后不记得。
+const readTheme=()=>{try{const v=localStorage.getItem('theme');
+  return v==='light'||v==='dark'?v:''}catch(e){return ''}};
+const saveTheme=k=>{try{k?localStorage.setItem('theme',k):localStorage.removeItem('theme')}catch(e){}};
+let THEME=readTheme();
+function paintTheme(){
+  const t=THEMES.find(x=>x.k===THEME)||THEMES[0];
+  if(t.k) document.documentElement.dataset.theme=t.k;
+  else delete document.documentElement.dataset.theme;
+  const b=$('#theme');
+  b.textContent=t.i; b.title='配色：'+t.n; b.setAttribute('aria-label','配色：'+t.n);
+}
+$('#theme').onclick=()=>{
+  THEME=THEMES[(THEMES.findIndex(x=>x.k===THEME)+1)%THEMES.length].k;
+  saveTheme(THEME); paintTheme();
+};
+paintTheme();
 const start=location.hash.slice(1);
 if(start&&BY[start]){ view='post';CUR=start; history.replaceState({v:'post',id:start},'','#'+start); post(start); }
 else if(VIEWS[start]){ view=start; history.replaceState({v:start,id:null},'','#'+start); VIEWS[start](true); tab(); }

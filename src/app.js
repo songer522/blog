@@ -347,6 +347,27 @@ $('#lb').addEventListener('touchend',e=>{
 $('#q').addEventListener('input',e=>search(e.target.value));
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>goto_(b.dataset.v));
 $('.brand').onclick=()=>{saveScroll();SCROLL.time=0;view='time';timeline(true);setScroll(0);pushView('time')};
+
+// 配色：跟随系统 → 浅色 → 深色 → 跟随系统。跟随系统时不写 data-theme，
+// 也不留 localStorage，交给 CSS 里的 prefers-color-scheme。
+const THEMES=[{k:'',n:'跟随系统',i:'◐'},{k:'light',n:'浅色',i:'☀'},{k:'dark',n:'深色',i:'☾'}];
+// file:// 下 Chrome 会禁掉 localStorage：仍然能切，只是刷新后不记得。
+const readTheme=()=>{try{const v=localStorage.getItem('theme');
+  return v==='light'||v==='dark'?v:''}catch(e){return ''}};
+const saveTheme=k=>{try{k?localStorage.setItem('theme',k):localStorage.removeItem('theme')}catch(e){}};
+let THEME=readTheme();
+function paintTheme(){
+  const t=THEMES.find(x=>x.k===THEME)||THEMES[0];
+  if(t.k) document.documentElement.dataset.theme=t.k;
+  else delete document.documentElement.dataset.theme;
+  const b=$('#theme');
+  b.textContent=t.i; b.title='配色：'+t.n; b.setAttribute('aria-label','配色：'+t.n);
+}
+$('#theme').onclick=()=>{
+  THEME=THEMES[(THEMES.findIndex(x=>x.k===THEME)+1)%THEMES.length].k;
+  saveTheme(THEME); paintTheme();
+};
+paintTheme();
 const start=location.hash.slice(1);
 if(start&&BY[start]){ view='post';CUR=start; history.replaceState({v:'post',id:start},'','#'+start); post(start); }
 else if(VIEWS[start]){ view=start; history.replaceState({v:start,id:null},'','#'+start); VIEWS[start](true); tab(); }
