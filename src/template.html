@@ -41,6 +41,25 @@ try{var t=localStorage.getItem('theme');
   <div class="lbcount" id="lbc"></div>
 </div>
 <button class="top" id="top" aria-label="回到顶部" title="回到顶部">↑</button>
+<div class="player" id="player" hidden>
+  <audio id="pa" preload="metadata"></audio>
+  <button type="button" class="player-fab" id="pfab" aria-label="展开播放器" aria-expanded="false">▶</button>
+  <div class="player-panel" id="ppanel">
+    <div class="player-head">
+      <div class="player-meta">
+        <div class="player-title" id="ptitle"></div>
+        <div class="player-artist" id="partist"></div>
+      </div>
+      <button type="button" class="player-collapse" id="pcollapse" aria-label="收起">▾</button>
+    </div>
+    <input class="player-seek" id="pseek" type="range" min="0" max="1000" value="0" step="1" aria-label="进度">
+    <div class="player-controls">
+      <button type="button" id="pprev" aria-label="上一首">‹</button>
+      <button type="button" class="player-toggle" id="ptoggle" aria-label="播放">▶</button>
+      <button type="button" id="pnext" aria-label="下一首">›</button>
+    </div>
+  </div>
+</div>
 {{data}}
 <script>
 {{app}}
