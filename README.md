@@ -6,6 +6,14 @@
 `index.html` 内已包含全部文字与检索功能，图片放在 `images/`（正文）与 `thumbs/`（缩略图）。
 直接双击 `index.html` 即可离线浏览。
 
+配色默认跟随系统（`prefers-color-scheme`），右上角的圆按钮可以在
+跟随系统 → 浅色 → 深色 之间循环，选择记在 `localStorage`。
+`file://` 下 Chrome 会禁掉 `localStorage`：按钮照样能切，只是刷新后不记得。
+
+深色配色只写在 `src/theme-dark.css` 一处，构建时填进 `src/styles.css` 的两个
+`{{darkTokens}}` 位置——一处跟随系统，一处对应手动切到深色。除颜色变量外，
+没有任何一条布局或组件规则需要为深色重复。
+
 唯二的外部依赖是留言功能与访问计数，均在离线时自动降级，不影响正文阅读：
 
 - 留言板与文章留言：Waline，脚本与样式来自 unpkg，数据来自 `neverland-waline.vercel.app`；加载失败时显示一行提示。
@@ -37,7 +45,8 @@ npm run check     # 只校验：index.html 与 data/ 不一致时报错退出
 | `index.html` | 生成物，也是提交进仓库、直接打开的那个文件 |
 | `build.js` | 生成脚本（无依赖） |
 | `src/template.html` | 页面骨架，含 `{{styles}}` `{{data}}` `{{app}}` `{{postCount}}` 占位符 |
-| `src/styles.css` | 全站样式 |
+| `src/styles.css` | 全站样式（浅色变量 + 全部规则） |
+| `src/theme-dark.css` | 深色配色变量，只此一份 |
 | `src/app.js` | 全部前端逻辑（正文、时间轴、搜索、相册、系列、留言板） |
 | `data/posts.json` | 350 篇正文 |
 | `data/photos.json` | 654 张正文图片的元数据 |

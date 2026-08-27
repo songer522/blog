@@ -168,8 +168,19 @@ if (problems.length) {
 
 const body = (file) => read('src', file).replace(/\n$/, '');
 
+// The dark palette is authored once, in src/theme-dark.css, and emitted twice: once
+// under prefers-color-scheme for visitors who never touch the switch, once under
+// [data-theme=dark] for those who do. styles.css marks both spots with {{darkTokens}}.
+const DARK_SLOT = '{{darkTokens}}';
+const stylesheet = body('styles.css');
+const slots = stylesheet.split(DARK_SLOT).length - 1;
+if (slots !== 2) {
+  console.error(`build failed — src/styles.css has ${slots} ${DARK_SLOT} slots, expected 2`);
+  process.exit(1);
+}
+
 const parts = {
-  styles: body('styles.css'),
+  styles: stylesheet.split(DARK_SLOT).join(body('theme-dark.css')),
   app: body('app.js'),
   data: `<script>const D=${json};</script>`,
   postCount: String(D.posts.length),
