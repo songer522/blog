@@ -25,7 +25,6 @@ const meta = load('meta.json');
 const D = {
   posts: load('posts.json'),
   series: meta.series,
-  orphans: meta.orphans,
   intro: meta.intro,
   hl: meta.hl,
   extra: load('extra.json'),
@@ -73,16 +72,86 @@ D.photos.forEach((p, i) => {
   (p.c || []).forEach((c) => cats.has(c) || complain(`photos[${i}]: no such category ${c}`));
 });
 
-// orphans duplicates "the photos with no post"; app.js never reads it, so keep the two
-// in step rather than letting the stale copy drift.
-const sorted = (xs) => xs.slice().sort((a, b) => a - b).join();
-const detached = D.photos.filter((p) => p.p === null).map((p) => p.i);
-if (sorted(D.orphans) !== sorted(detached)) {
-  complain(`orphans lists [${sorted(D.orphans)}] but photos with no post are [${sorted(detached)}]`);
-}
+// Image indices are positional: app.js turns them straight into iNNN/xNNN filenames, so a
+// gap or a duplicate means a photo was dropped or two records point at the same file.
+const continuous = (label, ids) => {
+  const seen = new Set();
+  const dupes = new Set();
+  ids.forEach((i) => (seen.has(i) ? dupes.add(i) : seen.add(i)));
+  if (dupes.size) complain(`${label}: duplicate indices ${[...dupes].sort((a, b) => a - b).join(', ')}`);
+  const lo = Math.min(...ids);
+  const hi = Math.max(...ids);
+  if (lo !== 0) complain(`${label}: indices start at ${lo}, expected 0`);
+  const gaps = [];
+  for (let i = lo; i <= hi; i++) if (!seen.has(i)) gaps.push(i);
+  if (gaps.length) complain(`${label}: missing indices ${gaps.join(', ')} in the run ${lo}\u2013${hi}`);
+};
+
+// Every iNNN belongs to photos; a post's m[] must draw from that same pool.
+continuous('photos', D.photos.map((p) => p.i));
+continuous('extra', D.extra.map((x) => x.k));
+
+const inAlbum = new Set(D.photos.map((p) => p.i));
+D.posts.forEach((p) =>
+  (p.m || []).forEach((m, j) => {
+    if (!inAlbum.has(m.i)) complain(`post ${p.id} m[${j}]: image ${m.i} is not in photos`);
+  }),
+);
+
+// w/h drive the figure aspect ratio; without them the page reflows as images load.
+const dimension = (label, o) => {
+  ['w', 'h'].forEach((k) => {
+    if (!Number.isInteger(o[k]) || o[k] <= 0) {
+      complain(`${label}: ${k} is ${JSON.stringify(o[k])}, expected a positive integer`);
+    }
+  });
+};
+D.posts.forEach((p) => (p.m || []).forEach((m, j) => dimension(`post ${p.id} m[${j}]`, m)));
+D.extra.forEach((x, i) => dimension(`extra[${i}]`, x));
 D.extra.forEach((x, i) =>
   (x.c || []).forEach((c) => cats.has(c) || complain(`extra[${i}]: no such category ${c}`)),
 );
+
+// README repeats the counts in prose and in the file table, and they have gone stale
+// before. Every number the README claims must match what data/ actually holds.
+const totals = {
+  posts: D.posts.length,
+  photos: D.photos.length,
+  extra: D.extra.length,
+  wall: D.wall.length,
+  images: D.photos.length + D.extra.length,
+};
+
+const CLAIMS = [
+  ['posts', /共 (\d+) 篇/g],
+  ['posts', /(\d+) 篇正文/g],
+  ['images', /(\d+) 张图片/g],
+  ['images', /(\d+) 张原图/g],
+  ['images', /(\d+) 张缩略图/g],
+  ['photos', /(\d+) 张正文图片/g],
+  ['photos', /正文 (\d+) 张/g],
+  ['extra', /(\d+) 张「这四年啊」/g],
+  ['extra', /「这四年啊」(\d+) 张/g],
+  ['wall', /(\d+) 条留言板记录/g],
+];
+
+const readme = read('README.md');
+CLAIMS.forEach(([key, pattern]) => {
+  const found = [...readme.matchAll(pattern)];
+  if (!found.length) {
+    complain(`README.md no longer says "${pattern.source}" — the ${key} count check is dead`);
+    return;
+  }
+  found.forEach((m) => {
+    if (Number(m[1]) !== totals[key]) {
+      complain(`README.md claims "${m[0].trim()}" but ${key} is ${totals[key]}`);
+    }
+  });
+});
+
+if (IMAGES.size !== totals.images) {
+  complain(`images/ holds ${IMAGES.size} files but the data describes ${totals.images}`);
+}
 
 // Inlining safety: either sequence would end the script element early.
 const json = JSON.stringify(D);
