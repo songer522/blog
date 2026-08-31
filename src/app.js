@@ -49,7 +49,7 @@ function heat(){
 const stat=(a,b)=>'<div class="stat"><b>'+a+'</b><span>'+b+'</span></div>';
 
 function card(p,hl){
-  const th=p.m.length?'<img class="tn" alt="" loading="lazy" src="thumbs/i'+String(p.m[0].i).padStart(3,'0')+'.jpg">':'';
+  const th=p.m.length?'<img class="tn" alt="'+esc(p.t)+'" loading="lazy" src="thumbs/i'+String(p.m[0].i).padStart(3,'0')+'.jpg">':'';
   let ex=p.body.replace(/\n/g,' ').slice(0,110);
   if(hl){const k=hl.toLowerCase(),j=p.body.toLowerCase().indexOf(k);
     if(j>=0){const a=Math.max(0,j-34);ex=(a?'…':'')+p.body.slice(a,a+120).replace(/\n/g,' ');}}
