@@ -234,5 +234,5 @@ fs.writeFileSync(out, html);
 console.log(
   'built index.html — %d posts, %d photos, %d extra, %d wall, %d tracks, %s',
   D.posts.length, D.photos.length, D.extra.length, D.wall.length, D.music.length,
-  (html.length / 1024).toFixed(0) + 'KB',
+  (Buffer.byteLength(html) / 1024).toFixed(0) + 'KB',
 );
