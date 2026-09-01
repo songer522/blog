@@ -53,12 +53,13 @@ function card(p,hl){
   let ex=p.body.replace(/\n/g,' ').slice(0,110);
   if(hl){const k=hl.toLowerCase(),j=p.body.toLowerCase().indexOf(k);
     if(j>=0){const a=Math.max(0,j-34);ex=(a?'…':'')+p.body.slice(a,a+120).replace(/\n/g,' ');}}
-  ex=esc(ex); if(hl)ex=mark(ex,hl);
+  ex=hl?mark(ex,hl):esc(ex);
   return '<div class="card" data-go="'+p.id+'"><div class="row"><div class="tx">'
    +'<div class="dt">'+p.d+(p.m.length?'<span class="pill">'+p.m.length+' 图</span>':'')+'</div>'
-   +'<h3>'+(hl?mark(esc(p.t),hl):esc(p.t))+'</h3><p>'+ex+'</p></div>'+th+'</div></div>';
+   +'<h3>'+(hl?mark(p.t,hl):esc(p.t))+'</h3><p>'+ex+'</p></div>'+th+'</div></div>';
 }
-const mark=(s,k)=>s.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>'<mark>'+m+'</mark>');
+const mark=(s,k)=>{const re=new RegExp('('+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+ return s.split(re).map((seg,i)=>i&1?'<mark>'+esc(seg)+'</mark>':esc(seg)).join('')};
 const list=a=>a.length?a.map(p=>card(p)).join(''):'<div class="empty">没有内容。</div>';
 
 function show(html_,scroll){main.innerHTML=html_; if(scroll!==false)window.scrollTo(0,0);
@@ -190,8 +191,8 @@ function day(iso, restore){
   pushView('day', iso);
 }
 function search(k){
-  view='search';tab();
   if(!k.trim()){timeline();return}
+  view='search';tab();
   const kk=k.toLowerCase();
   const hit=P.filter(p=>p.t.toLowerCase().includes(kk)||p.body.toLowerCase().includes(kk));
   show('<h2 class="sec">“'+esc(k)+'” · '+hit.length+' 篇</h2>'
@@ -275,7 +276,8 @@ window.addEventListener('popstate', e=>{
   restoreState(e.state || (BY[h] ? {v:'post',id:h} : (VIEWS[h] ? {v:h} : null)));
 });
 function tab(){document.querySelectorAll('nav button').forEach(b=>
-  b.classList.toggle('on',b.dataset.v===view))}
+  b.classList.toggle('on',b.dataset.v===view));
+  if(view!=='search'){const q=$('#q');if(q.value)q.value=''}}
 
 document.addEventListener('click',e=>{
   const yb=e.target.closest('[data-yr]');
